@@ -38,12 +38,17 @@ from pathlib import Path
 
 AMD_INDEX = "https://stable.repo.amd.com/rocm/whl-next/"
 
-# Seed pins: the AMD ROCm PyTorch line for gfx1100 (RDNA3), as given for
-# this GPU. Note torchvision/torchaudio builds were realigned to the ones
-# that actually exist on the stable index for rocm10.1.0.
+# Seed pins: the AMD ROCm PyTorch line for gfx1100 (RDNA3).
+# Version pairing is load-bearing: stock PyPI alignment is
+#   torch 2.12.x <-> torchvision 0.27.x,  2.13 <-> 0.28,  2.14 <-> 0.29
+# and the AMD index mirrors it: the `rocm10.1.0` line has torch 2.14.0 with
+# torchvision 0.29.0a0 (pre-release naming, same ABI pairing the PyPI
+# channel uses). Pairing torchvision 0.27 with torch 2.14 segfaults at
+# import (C++ ops registered by the torchvision extension are missing ->
+# "operator torchvision::nms does not exist").
 SEED_WHEELS = [
     ("torch", "2.14.0+rocm10.1.0"),
-    ("torchvision", "0.27.0+rocm10.1.0"),
+    ("torchvision", "0.29.0a0+rocm10.1.0"),
     ("torchaudio", "2.11.0.2+rocm10.1.0"),
 ]
 
@@ -430,11 +435,16 @@ def main() -> int:
         pending.append((sdk_pkg, None))
     # torch's device extras are gated with `extra == "device-gfx1100"` and
     # not followed by the base-graph closure — vendor them explicitly, as
-    # the official `pip install torch[device-gfx1100]` line does.
+    # the official `pip install torch[device-gfx1100]` line does. The same
+    # split packaging applies to torchvision: its kernels live in per-arch
+    # `amd-torchvision-device-gfx1100` wheels (no shared `gfx110x` alias —
+    # the exact-arch package is required).
     for dev_ver in SEED_WHEELS:
         if dev_ver[0] == "torch":
             pending.append(("amd-torch-device-gfx1100", dev_ver[1]))
             pending.append(("amd-torch-device-gfx110x", dev_ver[1]))
+        elif dev_ver[0] == "torchvision":
+            pending.append(("amd-torchvision-device-gfx1100", dev_ver[1]))
 
     staged: list[str] = []
     while pending:
