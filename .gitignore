@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# uv / virtualenv
+.venv/
+
+# Vendored AMD ROCm wheels (~1.9 GB, rebuilt by
+# scripts/prepare_rocm_wheels.py). Keep the tracked .gitignore inside.
+vendor/pytorch-rocm/*
+!vendor/pytorch-rocm/.gitignore
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

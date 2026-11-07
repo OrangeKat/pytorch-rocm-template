@@ -59,7 +59,7 @@ def main() -> None:
     t0 = time.perf_counter()
     _ = a @ b
     torch.cuda.synchronize()
-    print(f" {time.perf_counter() - t0 * 1_000:.1f} ms  OK")
+    print(f" {(time.perf_counter() - t0) * 1_000:.1f} ms  OK")
 
 
 if __name__ == "__main__":
